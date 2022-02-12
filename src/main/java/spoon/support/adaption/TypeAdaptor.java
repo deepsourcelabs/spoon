@@ -98,6 +98,7 @@ public class TypeAdaptor {
 	 * 	superRef)}
 	 * @see #isSubtype(CtType, CtTypeReference)
 	 */
+	@SuppressWarnings("removal")
 	public boolean isSubtypeOf(CtTypeReference<?> superRef) {
 		if (useLegacyTypeAdaption(superRef)) {
 			return getOldClassTypingContext().isSubtypeOf(superRef);
@@ -145,6 +146,7 @@ public class TypeAdaptor {
 	 * @param superRef the potential supertype
 	 * @return true if base extends/implements the super type
 	 */
+	@SuppressWarnings("removal")
 	public static boolean isSubtype(CtType<?> base, CtTypeReference<?> superRef) {
 		if (useLegacyTypeAdaption(base)) {
 			return new TypeAdaptor(base).isSubtypeOf(superRef);
@@ -276,6 +278,7 @@ public class TypeAdaptor {
 	 * @param second the second method
 	 * @return true if the methods are conflicting
 	 */
+	@SuppressWarnings("removal")
 	public boolean isConflicting(CtMethod<?> first, CtMethod<?> second) {
 		if (useLegacyTypeAdaption(first)) {
 			return getOldClassTypingContext().isSameSignature(first, second);
@@ -332,6 +335,7 @@ public class TypeAdaptor {
 	 * @param second the second method
 	 * @return true if the two methods have the same signature
 	 */
+	@SuppressWarnings("removal")
 	public boolean isSameSignature(CtMethod<?> first, CtMethod<?> second) {
 		if (useLegacyTypeAdaption(first)) {
 			return getOldClassTypingContext().isSubSignature(first, second);
@@ -381,6 +385,7 @@ public class TypeAdaptor {
 	 * @param superMethod the method that might be overridden
 	 * @return true if {@code subMethod} overrides {@code superMethod}
 	 */
+	@SuppressWarnings("removal")
 	public boolean isOverriding(CtMethod<?> subMethod, CtMethod<?> superMethod) {
 		if (useLegacyTypeAdaption(subMethod)) {
 			return getOldClassTypingContext().isOverriding(subMethod, superMethod);
@@ -566,6 +571,8 @@ public class TypeAdaptor {
 			declarationNodes
 		);
 
+		// Ensure we can resolve type parameters that are resolved within the start reference: Translating the "X" in
+		// "List<X>" for a start reference of "List<String>" should return String.
 		if (!startReference.getActualTypeArguments().isEmpty()) {
 			// Ensure we can resolve type parameters that are resolved within the start reference: Translating the "X" in
 			// "List<X>" for a start reference of "List<String>" should return String.

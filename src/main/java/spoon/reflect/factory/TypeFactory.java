@@ -41,14 +41,7 @@ import spoon.support.visitor.MethodTypingContext;
 import spoon.support.visitor.java.JavaReflectionTreeBuilder;
 
 import java.lang.reflect.TypeVariable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -56,6 +49,9 @@ import java.util.function.Function;
  * The {@link CtType} sub-factory.
  */
 public class TypeFactory extends SubFactory {
+
+	private final ConcurrentHashMap<String, CtTypeReference<?>> typeRefCache = new ConcurrentHashMap<>(512);
+	private final ConcurrentHashMap<String, CtType<?>> typeCache = new ConcurrentHashMap<>(512);
 
 	private static final Set<String> NULL_PACKAGE_CLASSES = Set.of(
 			"void", "boolean", "byte", "short", "char", "int", "float", "long", "double",
@@ -315,10 +311,12 @@ public class TypeFactory extends SubFactory {
 	/**
 	 * Creates a reference to a simple type
 	 */
+	@SuppressWarnings("unchecked")
 	public <T> CtTypeReference<T> createReference(Class<T> type, boolean includingFormalTypeParameter) {
 		if (type == null) {
 			return null;
 		}
+		if (typeRefCache.containsKey(type.getName())) return (CtTypeReference<T>) typeRefCache.get(type.getName()).clone();
 		if (type.isArray()) {
 			CtArrayTypeReference<T> array = factory.Core().createArrayTypeReference();
 			array.setComponentType(createReference(type.getComponentType(), includingFormalTypeParameter));
@@ -332,7 +330,8 @@ public class TypeFactory extends SubFactory {
 			}
 		}
 
-		return typeReference;
+		typeRefCache.put(type.getName(), typeReference);
+		return typeReference.clone();
 	}
 
 	/**
@@ -358,6 +357,14 @@ public class TypeFactory extends SubFactory {
 	public <T> CtTypeReference<T> createReference(CtType<T> type, boolean includingFormalTypeParameter) {
 		CtTypeReference<T> ref = factory.Core().createTypeReference();
 
+		if (!typeCache.containsKey(type.getQualifiedName())) {
+			typeCache.put(type.getQualifiedName(), type);
+		}
+
+		if (typeRefCache.containsKey(type.getQualifiedName())) {
+			return (CtTypeReference<T>) typeRefCache.get(type.getQualifiedName()).clone();
+		}
+
 		if (type.getDeclaringType() != null) {
 			ref.setDeclaringType(createReference(type.getDeclaringType(), includingFormalTypeParameter));
 		} else if (type.getPackage() != null) {
@@ -371,6 +378,9 @@ public class TypeFactory extends SubFactory {
 				ref.addActualTypeArgument(formalTypeParam.getReference());
 			}
 		}
+
+		typeRefCache.put(ref.getQualifiedName(), ref);
+
 		return ref;
 	}
 
@@ -391,6 +401,11 @@ public class TypeFactory extends SubFactory {
 		if (qualifiedName.endsWith("[]")) {
 			return createArrayReference(qualifiedName.substring(0, qualifiedName.length() - 2));
 		}
+
+		if (typeRefCache.containsKey(qualifiedName)) {
+			return (CtTypeReference<T>) typeRefCache.get(qualifiedName).clone();
+		}
+
 		CtTypeReference<T> ref = factory.Core().createTypeReference();
 		if (hasInnerType(qualifiedName) > 0) {
 			ref.setDeclaringType(createReference(getDeclaringTypeName(qualifiedName)));
@@ -400,6 +415,9 @@ public class TypeFactory extends SubFactory {
 			ref.setPackage(factory.Package().topLevel());
 		}
 		ref.setSimpleName(getSimpleName(qualifiedName));
+
+		typeRefCache.put(qualifiedName, ref);
+
 		return ref;
 	}
 
@@ -423,6 +441,10 @@ public class TypeFactory extends SubFactory {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> CtType<T> get(final String qualifiedName) {
+		if (typeCache.containsKey(qualifiedName)) {
+			return (CtType<T>) typeCache.get(qualifiedName);
+		}
+
 		int packageIndex = qualifiedName.lastIndexOf(CtPackage.PACKAGE_SEPARATOR);
 		CtPackage pack;
 		if (packageIndex > 0) {

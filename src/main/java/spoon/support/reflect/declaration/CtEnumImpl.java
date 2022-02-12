@@ -75,6 +75,10 @@ public class CtEnumImpl<T extends Enum<?>> extends CtClassImpl<T> implements CtE
 			enumValue.setParent(this);
 			getFactory().getEnvironment().getModelChangeListener().onListAdd(this, VALUE, this.enumValues, enumValue);
 			enumValues.add(enumValue);
+			if (enumValue.getDefaultExpression() instanceof CtNewClass<?>) {
+				// TODO set implicit sealed modifier
+				removeModifier(ModifierKind.FINAL); // enum is not final anymore
+			}
 		}
 
 		// enum value already exists.
@@ -83,6 +87,7 @@ public class CtEnumImpl<T extends Enum<?>> extends CtClassImpl<T> implements CtE
 
 	@Override
 	public boolean removeEnumValue(CtEnumValue<?> enumValue) {
+		// TODO handle implicit sealed modifier
 		if (enumValues == CtElementImpl.<CtEnumValue<?>>emptyList()) {
 			return false;
 		}
@@ -144,6 +149,28 @@ public class CtEnumImpl<T extends Enum<?>> extends CtClassImpl<T> implements CtE
 	@Override
 	public CtEnum<T> clone() {
 		return (CtEnum<T>) super.clone();
+	}
+
+	// TODO this *can* be enum values in some cases - how to model that?
+
+	@Override
+	public Set<CtTypeReference<?>> getPermittedTypes() {
+		return super.getPermittedTypes();
+	}
+
+	@Override
+	public CtSealable setPermittedTypes(Collection<CtTypeReference<?>> permittedTypes) {
+		return super.setPermittedTypes(permittedTypes);
+	}
+
+	@Override
+	public CtSealable addPermittedType(CtTypeReference<?> type) {
+		return super.addPermittedType(type);
+	}
+
+	@Override
+	public CtSealable removePermittedType(CtTypeReference<?> type) {
+		return super.removePermittedType(type);
 	}
 
 	@Override

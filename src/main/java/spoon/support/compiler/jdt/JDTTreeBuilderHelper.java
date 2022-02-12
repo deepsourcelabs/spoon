@@ -76,8 +76,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.function.Consumer;
+import java.util.StringJoiner;
 
 import static spoon.support.compiler.jdt.JDTTreeBuilderQuery.getModifiers;
 import static spoon.support.compiler.jdt.JDTTreeBuilderQuery.isLhsAssignment;
@@ -749,6 +749,20 @@ public class JDTTreeBuilderHelper {
 				CtTypeReference<?> reference = jdtTreeBuilder.references.getTypeReference(permittedType);
 				reference.setImplicit(true);
 				addPermittedType.accept(reference);
+			}
+		}
+
+		if (typeDeclaration.binding.permittedTypes != null) {
+			for (ReferenceBinding permittedType : typeDeclaration.binding.permittedTypes) {
+				CtTypeReference<?> typeReference = jdtTreeBuilder.references.getTypeReference(permittedType);
+				type.addPermittedType(typeReference);
+			}
+		}
+
+		if (typeDeclaration.binding.permittedTypes != null) {
+			for (ReferenceBinding permittedType : typeDeclaration.binding.permittedTypes) {
+				CtTypeReference<?> typeReference = jdtTreeBuilder.references.getTypeReference(permittedType);
+				type.addPermittedType(typeReference);
 			}
 		}
 

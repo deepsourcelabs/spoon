@@ -35,6 +35,7 @@ import spoon.reflect.declaration.CtRecordComponent;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.factory.FactoryImpl;
+import spoon.reflect.factory.ModuleFactory;
 import spoon.reflect.path.CtRole;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.AllTypeMembersFunction;
@@ -42,6 +43,7 @@ import spoon.reflect.visitor.filter.TypeFilter;
 import spoon.support.adaption.TypeAdaptor;
 import spoon.support.DefaultCoreFactory;
 import spoon.support.StandardEnvironment;
+import spoon.support.adaption.TypeAdaptor;
 import spoon.support.compiler.FileSystemFolder;
 
 /**
@@ -338,6 +340,13 @@ public class Metamodel {
 	private static String getConceptName(String simpleName) {
 		if (simpleName.endsWith(CLASS_SUFFIX)) {
 			simpleName = simpleName.substring(0, simpleName.length() - CLASS_SUFFIX.length());
+			// The unnamed module and certain other classes are a special case due to their names
+		} else if (simpleName.equals("CtUnnamedModule")) {
+			simpleName = "CtModule";
+		} else if (simpleName.equals("CtRootPackage")) {
+			simpleName = "CtPackage";
+		} else if (simpleName.equals("CtUnresolvedImport")) {
+			simpleName = "CtImport";
 		}
 		return simpleName;
 	}
