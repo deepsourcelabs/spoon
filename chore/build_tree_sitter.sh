@@ -13,6 +13,6 @@ cd java-tree-sitter
 
 python3 build.py -o libjava-tree-sitter tree-sitter-java
 
-./gradlew :build publishToMavenLocal
+./gradlew build publishToMavenLocal
 
 cd ..
