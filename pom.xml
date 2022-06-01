@@ -310,25 +310,25 @@
           </classpathDependencyExcludes>
         </configuration>
       </plugin>
-        <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>exec-maven-plugin</artifactId>
-            <version>3.0.0</version>
-            <executions>
-                <execution>
-                    <phase>initialize</phase>
-                    <id>install-java-treesitter</id>
-                    <goals>
-                        <goal>exec</goal>
-                    </goals>
-                </execution>
-            </executions>
+<!--        <plugin>-->
+<!--            <groupId>org.codehaus.mojo</groupId>-->
+<!--            <artifactId>exec-maven-plugin</artifactId>-->
+<!--            <version>3.0.0</version>-->
+<!--            <executions>-->
+<!--                <execution>-->
+<!--                    <phase>initialize</phase>-->
+<!--                    <id>install-java-treesitter</id>-->
+<!--                    <goals>-->
+<!--                        <goal>exec</goal>-->
+<!--                    </goals>-->
+<!--                </execution>-->
+<!--            </executions>-->
 
-            <configuration>
-                <executable>sh</executable>
-                <commandlineArgs>chore/build_tree_sitter.sh</commandlineArgs>
-            </configuration>
-        </plugin>
+<!--            <configuration>-->
+<!--                <executable>sh</executable>-->
+<!--                <commandlineArgs>chore/build_tree_sitter.sh</commandlineArgs>-->
+<!--            </configuration>-->
+<!--        </plugin>-->
       <plugin>
         <!-- see https://github.com/castor-software/depclean -->
         <groupId>se.kth.castor</groupId>
