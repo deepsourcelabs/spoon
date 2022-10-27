@@ -30,6 +30,7 @@ import spoon.compiler.builder.JDTBuilderImpl;
 import spoon.compiler.builder.SourceOptions;
 import spoon.processing.ProcessingManager;
 import spoon.processing.Processor;
+import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.declaration.CtType;
@@ -546,7 +547,7 @@ public class JDTBasedSpoonCompiler implements spoon.SpoonModelBuilder {
 
 		factory.getEnvironment().debugMessage("Generating source files to: " + outputDirectory);
 
-		for (spoon.reflect.cu.CompilationUnit cu : factory.CompilationUnit().getMap().values()) {
+		for (CtCompilationUnit cu : factory.CompilationUnit().getMap().values()) {
 
 			if (cu.getDeclaredTypes().isEmpty()) { // case of package-info
 				continue;
@@ -689,7 +690,7 @@ public class JDTBasedSpoonCompiler implements spoon.SpoonModelBuilder {
 		return templates;
 	}
 
-	protected InputStream getCompilationUnitInputStream(spoon.reflect.cu.CompilationUnit cu) {
+	protected InputStream getCompilationUnitInputStream(CtCompilationUnit cu) {
 		Environment env = factory.getEnvironment();
 		List<CtType<?>> toBePrinted = cu.getDeclaredTypes();
 
