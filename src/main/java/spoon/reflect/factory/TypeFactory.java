@@ -40,6 +40,7 @@ import spoon.support.visitor.GenericTypeAdapter;
 import spoon.support.visitor.MethodTypingContext;
 import spoon.support.visitor.java.JavaReflectionTreeBuilder;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -528,9 +529,17 @@ public class TypeFactory extends SubFactory {
 	 * Create a reference to a simple type, setting the beginning of its fully qualified name as implicit
 	 */
 	public <T> CtTypeReference<T> createSimplyQualifiedReference(String qualifiedName) {
-		CtTypeReference ref = createReference(qualifiedName);
+		CtTypeReference<T> ref = createReference(qualifiedName);
 		ref.getPackage().setImplicit(true);
 		return ref;
+	}
+
+	public void removeCachedType(String qualifiedName) {
+		typeRefCache.remove(qualifiedName);
+	}
+
+	public void addToCache(CtType<?> type) {
+		typeRefCache.put(type.getQualifiedName(), new WeakReference<>(type));
 	}
 
 	/**
@@ -544,6 +553,17 @@ public class TypeFactory extends SubFactory {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> CtType<T> get(final String qualifiedName) {
+		if (qualifiedName == null) return null;
+		cacheCheck: if (typeRefCache.containsKey(qualifiedName)) {
+			WeakReference<CtType<?>> typeRef = typeRefCache.get(qualifiedName);
+			if (typeRef == null) break cacheCheck;
+			CtType<T> type = (CtType<T>) typeRef.get();
+			if (type == null) break cacheCheck;
+
+			if (type.getFactory() == this.factory)
+				return type;
+		}
+
 		int packageIndex = qualifiedName.lastIndexOf(CtPackage.PACKAGE_SEPARATOR);
 		CtPackage pack;
 		if (packageIndex > 0) {
@@ -555,6 +575,7 @@ public class TypeFactory extends SubFactory {
 		if (pack != null) {
 			CtType<T> type = pack.getType(qualifiedName.substring(packageIndex + 1));
 			if (type != null) {
+				typeRefCache.put(qualifiedName, new WeakReference<>(type));
 				return type;
 			}
 		}
@@ -577,13 +598,17 @@ public class TypeFactory extends SubFactory {
 				if (enclosingClasses.isEmpty()) {
 					return null;
 				}
-				return enclosingClasses.get(0);
+
+				CtType<T> enclosingClass = enclosingClasses.get(0);
+				if (enclosingClass != null) typeRefCache.put(qualifiedName, new WeakReference<>(enclosingClass));
+				return enclosingClass;
 			}
 			if (isNumber(className)) {
 				// If the class name is an integer, the class is an anonymous class, otherwise,
 				// it is a standard class.
 				//TODO reset cache when type is modified
-				return getAnonymousTypeFromCache(t, className, k -> {
+
+				CtType<T> cachedType = getAnonymousTypeFromCache(t, className, k -> {
 					//the searching for declaration of anonymous class is expensive
 					//do that only once and store it in cache of CtType
 					final List<CtNewClass> anonymousClasses = t.getElements(new TypeFilter<CtNewClass>(CtNewClass.class) {
@@ -597,8 +622,14 @@ public class TypeFactory extends SubFactory {
 					}
 					return anonymousClasses.get(0).getAnonymousClass();
 				});
+
+				if (cachedType != null) typeRefCache.put(qualifiedName, new WeakReference<>(cachedType));
+				return cachedType;
 			} else {
-				return t.getNestedType(className);
+				CtType<T> thing = t.getNestedType(className);
+
+				if (thing != null) typeRefCache.put(qualifiedName, new WeakReference<>(thing));
+				return thing;
 			}
 		}
 		return null;
