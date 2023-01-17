@@ -377,6 +377,9 @@ public class TypeFactory extends SubFactory {
 		super(factory);
 	}
 
+	/**
+	 * Default constructor. Will initialise itself with default factory and environment implementations.
+	 */
 	public TypeFactory() {
 		this(new FactoryImpl(new DefaultCoreFactory(), new StandardEnvironment()));
 	}
@@ -430,6 +433,11 @@ public class TypeFactory extends SubFactory {
 		return array;
 	}
 
+	/**
+	 * Create a reference from a Class object.
+	 * @param type the Class object to create a reference from.
+	 * @return A new type reference for the specified class.
+	 */
 	public <T> CtTypeReference<T> createReference(Class<T> type) {
 		return createReference(type, false);
 	}
