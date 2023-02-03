@@ -38,6 +38,8 @@ public final class Refactoring {
 	 */
 	public static void changeTypeName(final CtType<?> type, String name) {
 
+		// since we're renaming the type, we should not retain it in cache.
+		type.getFactory().Type().removeCachedType(type.getQualifiedName());
 		// first we remove the type from the list of types
 		// to be pretty-printed
 		if (type.isTopLevel()) {

@@ -197,6 +197,7 @@ public class CtPackageImpl extends CtNamedElementImpl implements CtPackage {
 		}
 		// type map will take care of setting the parent
 		types.put(type.getSimpleName(), type);
+		factory.Type().addToCache(type);
 		return (T) this;
 	}
 

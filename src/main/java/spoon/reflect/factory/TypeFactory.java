@@ -94,7 +94,7 @@ public class TypeFactory extends SubFactory {
 	public final CtTypeReference<?> OMITTED_TYPE_ARG_TYPE = createReference(CtTypeReference.OMITTED_TYPE_ARG_NAME);
 
 	private final Map<Class<?>, CtType<?>> shadowCache = new ConcurrentHashMap<>();
-	private final ConcurrentHashMap<String, WeakReference<CtType<?>>> typeRefCache = new ConcurrentHashMap<>();
+	private final Map<String, WeakReference<CtType<?>>> typeRefCache = new ConcurrentHashMap<>();
 
 	/**
 	 * Returns a reference on the null type (type of null).
@@ -423,11 +423,26 @@ public class TypeFactory extends SubFactory {
 	}
 
 	public void removeCachedType(String qualifiedName) {
+		List<String> cachedTypesToRemove = new ArrayList<>();
+		// remove any conflicting refs.
+		for (Map.Entry<String, WeakReference<CtType<?>>> entry : typeRefCache.entrySet()) {
+			if (entry.getValue().get() == null) {
+				cachedTypesToRemove.add(entry.getKey());
+			} else if (!entry.getKey().equals(entry.getValue().get().getQualifiedName())) {
+				cachedTypesToRemove.add(entry.getKey());
+			}
+		}
+		for (String typeName : cachedTypesToRemove) {
+			typeRefCache.remove(typeName);
+		}
 		typeRefCache.remove(qualifiedName);
 	}
 
 	public void addToCache(CtType<?> type) {
-		typeRefCache.put(type.getQualifiedName(), new WeakReference<>(type));
+		if (factory.getModel().isBuildModelFinished()) {
+
+			typeRefCache.put(type.getQualifiedName(), new WeakReference<>(type));
+		}
 	}
 
 	/**
@@ -450,7 +465,8 @@ public class TypeFactory extends SubFactory {
 				break cacheCheck;
 			}
 			CtType<T> type = (CtType<T>) typeRef.get();
-			if (type == null) {
+			if (type == null || !qualifiedName.equals(type.getQualifiedName())) {
+				typeRefCache.remove(qualifiedName);
 				break cacheCheck;
 			}
 
@@ -470,7 +486,7 @@ public class TypeFactory extends SubFactory {
 		if (pack != null) {
 			CtType<T> type = pack.getType(qualifiedName.substring(packageIndex + 1));
 			if (type != null) {
-				typeRefCache.put(qualifiedName, new WeakReference<>(type));
+				addToCache(type);
 				return type;
 			}
 		}
@@ -496,7 +512,7 @@ public class TypeFactory extends SubFactory {
 
 				CtType<T> enclosingClass = enclosingClasses.get(0);
 				if (enclosingClass != null) {
-					typeRefCache.put(qualifiedName, new WeakReference<>(enclosingClass));
+					addToCache(enclosingClass);
 				}
 				return enclosingClass;
 			}
@@ -521,14 +537,14 @@ public class TypeFactory extends SubFactory {
 				});
 
 				if (cachedType != null) {
-					typeRefCache.put(qualifiedName, new WeakReference<>(cachedType));
+					addToCache(cachedType);
 				}
 				return cachedType;
 			} else {
 				CtType<T> thing = t.getNestedType(className);
 
 				if (thing != null) {
-					typeRefCache.put(qualifiedName, new WeakReference<>(thing));
+					addToCache(thing);
 				}
 				return thing;
 			}
