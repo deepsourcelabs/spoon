@@ -1095,7 +1095,7 @@ public class ParentExiter extends CtInheritanceScanner {
 				tryWithResource.addResource((CtResource<?>) variableRef.getDeclaration().clone().setImplicit(true));
 			} else {
 				// we have to find it manually
-				for (ASTPair pair: this.jdtTreeBuilder.getContextBuilder().getAllContexts()) {
+				outer: for (ASTPair pair: this.jdtTreeBuilder.getContextBuilder().getAllContexts()) {
 					final List<CtLocalVariable> variables = pair.element().getElements(new TypeFilter<>(CtLocalVariable.class));
 					for (CtLocalVariable v: variables) {
 						if (v.getSimpleName().equals(variableRef.getSimpleName())) {
@@ -1104,7 +1104,8 @@ public class ParentExiter extends CtInheritanceScanner {
 							final CtLocalVariable clone = v.clone();
 							clone.setImplicit(true);
 							tryWithResource.addResource(clone);
-							break;
+							// Break out of the outer loop, we're done searching.
+							break outer;
 						}
 					}
 				}
