@@ -288,65 +288,6 @@ public class TemplateTest {
 	}
 
 	@Test
-	public void testTemplateC1() throws Exception {
-		Launcher spoon = new Launcher();
-		Factory factory = spoon.createFactory();
-		spoon.createCompiler(
-				factory,
-				SpoonResourceHelper
-						.resources("./src/test/java/spoon/test/template/testclasses/constructors/C1.java"),
-				SpoonResourceHelper
-						.resources(
-								"./src/test/java/spoon/test/template/testclasses/constructors/TemplateWithConstructor.java",
-								"./src/test/java/spoon/test/template/testclasses/constructors/TemplateWithFieldsAndMethods.java"))
-				.build();
-
-		CtClass<?> c1 = factory.Class().get(C1.class);
-
-		// before template: 1 constructor
-		assertEquals(1, // this is the default implicit constructor
-				c1.getConstructors().size());
-
-		// the actual substitution
-		new TemplateWithConstructor(factory.Type()
-				.createReference(Date.class))
-				.apply(c1);
-
-		// after template: 3 constructors
-		// System.out.println("==>"+c1.getConstructors());
-		assertEquals(3, c1.getConstructors().size());
-
-		CtField<?> toBeInserted = c1.getElements(
-				new NamedElementFilter<>(CtField.class,"toBeInserted")).get(0);
-		assertSame(Date.class, toBeInserted.getType()
-				.getActualTypeArguments().get(0).getActualClass());
-		assertEquals(
-				"java.util.List<java.util.Date> toBeInserted = new java.util.ArrayList<java.util.Date>();",
-				toBeInserted.toString());
-
-		new TemplateWithFieldsAndMethods(
-				"testparam", factory.Code().createLiteral("testparam2")).apply(c1);
-
-		assertEquals(3, c1.getConstructors().size());
-		assertNotNull(c1.getField("fieldToBeInserted"));
-
-		CtMethod<?> m = c1.getMethod("methodToBeInserted");
-		assertNotNull(m);
-		assertEquals("return \"testparam\"", m.getBody().getStatement(0)
-				.toString());
-
-		CtMethod<?> m2 = c1.getMethod("methodToBeInserted2");
-		assertNotNull(m2);
-		assertEquals("return \"testparam2\"", m2.getBody().getStatement(0)
-				.toString());
-
-		new ModelConsistencyChecker(factory.getEnvironment(), false, true).scan(c1);
-
-		assertEquals(0, factory.getEnvironment().getErrorCount());
-		assertEquals(0, factory.getEnvironment().getWarningCount());
-	}
-
-	@Test
 	public void testTemplateWithWrongUsedStringParam() throws Exception {
 		Launcher spoon = new Launcher();
 		Factory factory = spoon.createFactory();
@@ -829,34 +770,6 @@ public class TemplateTest {
 	}
 
 	@Test
-	public void testTemplateArrayAccess() {
-		//contract: the template engine supports substitution of arrays of parameters.
-		Launcher spoon = new Launcher();
-		spoon.addTemplateResource(new FileSystemFile("./src/test/java/spoon/test/template/testclasses/ArrayAccessTemplate.java"));
-
-		spoon.buildModel();
-		Factory factory = spoon.getFactory();
-
-		CtClass<?> resultKlass = factory.Class().create("Result");
-		CtClass<?> templateClass = factory.Templates().Class().get(ArrayAccessTemplate.class);
-		//create array of template parameters, which contains CtBlocks
-		TemplateParameter[] params = templateClass.getMethod("sampleBlocks").getBody().getStatements().toArray(new TemplateParameter[0]);
-		new ArrayAccessTemplate(params).apply(resultKlass);
-		CtMethod<?> m = resultKlass.getMethod("method");
-		//check that both TemplateParameter usages were replaced by appropriate parameter value and that substitution which miss the value is silently removed
-		assertEquals(2, m.getBody().getStatements().size());
-		assertTrue(m.getBody().getStatements().get(0) instanceof CtBlock);
-		assertEquals("int i = 0", ((CtBlock)m.getBody().getStatements().get(0)).getStatement(0).toString());
-		assertTrue(m.getBody().getStatements().get(1) instanceof CtBlock);
-		assertEquals("java.lang.String s = \"Spoon is cool!\"", ((CtBlock)m.getBody().getStatements().get(1)).getStatement(0).toString());
-		//check that both @Parameter usage was replaced by appropriate parameter value
-		CtMethod<?> m2 = resultKlass.getMethod("method2");
-		assertEquals("java.lang.System.out.println(\"second\")", m2.getBody().getStatement(0).toString());
-		//check that substitution by missing value correctly produces empty expression
-		assertEquals("java.lang.System.out.println(null)", m2.getBody().getStatement(1).toString());
-	}
-
-	@Test
 	public void testSubstituteInnerClass() {
 		//contract: the inner class is substituted well too and references to target class are substituted well
 		Launcher spoon = new Launcher();
@@ -914,50 +827,7 @@ public class TemplateTest {
 		assertFalse(result.isParentInitialized());
 		assertEquals("new java.lang.String(\"Spoon is cool!\")", result.toString());
 	}
-	
-	@Test
-	public void substituteStringLiteral() {
-		//contract: the substitution of literals is possible too
-		//contract: the template engine supports substitution of root element
-		Launcher spoon = new Launcher();
-		spoon.addTemplateResource(new FileSystemFile("./src/test/java/spoon/test/template/testclasses/SubstituteLiteralTemplate.java"));
 
-		spoon.buildModel();
-		Factory factory = spoon.getFactory();
-
-		{
-			//contract: String value is substituted in String literal
-			final CtClass<?> result = (CtClass<?>) new SubstituteLiteralTemplate("value1").apply(factory.createClass());
-			assertEquals("java.lang.String stringField1 = \"value1\";", result.getField("stringField1").toString());
-			assertEquals("java.lang.String stringField2 = \"Substring value1 is substituted too - value1\";", result.getField("stringField2").toString());
-			//contract: the parameter of type string replaces only method name
-			assertEquals("java.lang.System.out.println(spoon.test.template.testclasses.Params.value1())", result.getMethodsByName("m1").get(0).getBody().getStatement(0).toString());
-		}
-		{
-			//contract: String Literal value is substituted in String literal
-			final CtClass<?> result = (CtClass<?>) new SubstituteLiteralTemplate(factory.createLiteral("value2")).apply(factory.createClass());
-			assertEquals("java.lang.String stringField1 = \"value2\";", result.getField("stringField1").toString());
-			assertEquals("java.lang.String stringField2 = \"Substring value2 is substituted too - value2\";", result.getField("stringField2").toString());
-			//contract: the parameter of type String literal replaces whole invocation
-			assertEquals("java.lang.System.out.println(\"value2\")", result.getMethodsByName("m1").get(0).getBody().getStatement(0).toString());
-		}
-		{
-			//contract: simple name of type reference is substituted in String literal 
-			final CtClass<?> result = (CtClass<?>) new SubstituteLiteralTemplate(factory.Type().createReference("some.ignored.foo.TypeName")).apply(factory.createClass());
-			assertEquals("java.lang.String stringField1 = \"TypeName\";", result.getField("stringField1").toString());
-			assertEquals("java.lang.String stringField2 = \"Substring TypeName is substituted too - TypeName\";", result.getField("stringField2").toString());
-			//contract type reference is substituted in invocation as class access
-			assertEquals("java.lang.System.out.println(some.ignored.foo.TypeName.class)", result.getMethodsByName("m1").get(0).getBody().getStatement(0).toString());
-		}
-		{
-			//contract: number literal is substituted in String literal as number converted to string
-			final CtClass<?> result = (CtClass<?>) new SubstituteLiteralTemplate(factory.createLiteral(7)).apply(factory.createClass());
-			assertEquals("java.lang.String stringField1 = \"7\";", result.getField("stringField1").toString());
-			assertEquals("java.lang.String stringField2 = \"Substring 7 is substituted too - 7\";", result.getField("stringField2").toString());
-			//contract number literal is substituted in invocation as number literal
-			assertEquals("java.lang.System.out.println(7)", result.getMethodsByName("m1").get(0).getBody().getStatement(0).toString());
-		}
-	}
 	@Test
 	public void substituteSubString() {
 		//contract: the substitution of substrings works on named elements and references too

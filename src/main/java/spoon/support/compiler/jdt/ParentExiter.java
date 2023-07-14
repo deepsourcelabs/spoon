@@ -76,13 +76,13 @@ import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.code.CtWhile;
 import spoon.reflect.code.CtYieldStatement;
-import spoon.reflect.cu.CompilationUnit;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtAnnotatedElementType;
 import spoon.reflect.declaration.CtAnnotation;
 import spoon.reflect.declaration.CtAnnotationMethod;
 import spoon.reflect.declaration.CtAnonymousExecutable;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtEnum;
@@ -100,6 +100,7 @@ import spoon.reflect.declaration.CtTypeParameter;
 import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtArrayTypeReference;
+import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtIntersectionTypeReference;
 import spoon.reflect.reference.CtTypeParameterReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -945,7 +946,7 @@ public class ParentExiter extends CtInheritanceScanner {
 				ctPackage.removeType(type);
 			}
 			ctPackage.addType(type);
-			CompilationUnit cu = type.getPosition().getCompilationUnit();
+			CtCompilationUnit cu = type.getPosition().getCompilationUnit();
 			if (cu != null) {
 				cu.addDeclaredType(type);
 			}
@@ -1058,12 +1059,13 @@ public class ParentExiter extends CtInheritanceScanner {
 		} else if (child instanceof CtVariableRead) {
 			// special case of the resource being declared before
 			final CtVariableReference<?> variableRef = ((CtVariableRead<?>) child).getVariable();
-			if (variableRef.getDeclaration() != null) {
+			if (variableRef.getDeclaration() != null && !(variableRef instanceof CtFieldReference)) {
 				// getDeclaration works
-				tryWithResource.addResource((CtResource<?>) variableRef.getDeclaration().clone().setImplicit(true));
+				tryWithResource.addResource((CtResource<?>) variableRef.getDeclaration()
+						.clone().setImplicit(true).putMetadata(CtTryWithResource.RESOURCE_REF_KEY, variableRef));
 			} else {
 				// we have to find it manually
-				for (ASTPair pair: this.jdtTreeBuilder.getContextBuilder().getAllContexts()) {
+				outer: for (ASTPair pair: this.jdtTreeBuilder.getContextBuilder().getAllContexts()) {
 					final List<CtLocalVariable> variables = pair.element.getElements(new TypeFilter<>(CtLocalVariable.class));
 					for (CtLocalVariable v: variables) {
 						if (v.getSimpleName().equals(variableRef.getSimpleName())) {
@@ -1071,8 +1073,10 @@ public class ParentExiter extends CtInheritanceScanner {
 							// we clone it in order to comply with the contract of being a tree
 							final CtLocalVariable clone = v.clone();
 							clone.setImplicit(true);
+							clone.putMetadata(CtTryWithResource.RESOURCE_REF_KEY, v.getReference());
 							tryWithResource.addResource(clone);
-							break;
+							// Break out of the outer loop, we're done searching.
+							break outer;
 						}
 					}
 				}

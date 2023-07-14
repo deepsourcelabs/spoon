@@ -8,6 +8,7 @@
 package spoon.support.compiler.jdt;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.maven.api.annotations.Nullable;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
@@ -37,9 +38,9 @@ import spoon.reflect.code.CtForEach;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtStatementList;
 import spoon.reflect.code.CtTry;
-import spoon.reflect.cu.CompilationUnit;
 import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.cu.position.DeclarationSourcePosition;
+import spoon.reflect.declaration.CtCompilationUnit;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtModifiable;
 import spoon.reflect.declaration.CtPackage;
@@ -54,6 +55,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import static spoon.support.compiler.jdt.JDTTreeBuilderQuery.getModifiers;
 
@@ -69,7 +71,7 @@ public class PositionBuilder {
 	}
 
 	SourcePosition buildPosition(int sourceStart, int sourceEnd) {
-		CompilationUnit cu = this.jdtTreeBuilder.getContextBuilder().compilationUnitSpoon;
+		CtCompilationUnit cu = this.jdtTreeBuilder.getContextBuilder().compilationUnitSpoon;
 		final int[] lineSeparatorPositions = this.jdtTreeBuilder.getContextBuilder().getCompilationUnitLineSeparatorPositions();
 		return this.jdtTreeBuilder.getFactory().Core().createSourcePosition(cu, sourceStart, sourceEnd, lineSeparatorPositions);
 	}
@@ -82,7 +84,7 @@ public class PositionBuilder {
 			return SourcePosition.NOPOSITION;
 		}
 		CoreFactory cf = this.jdtTreeBuilder.getFactory().Core();
-		CompilationUnit cu = this.jdtTreeBuilder.getContextBuilder().compilationUnitSpoon;
+		CtCompilationUnit cu = this.jdtTreeBuilder.getContextBuilder().compilationUnitSpoon;
 		int[] lineSeparatorPositions = jdtTreeBuilder.getContextBuilder().getCompilationUnitLineSeparatorPositions();
 		char[] contents = jdtTreeBuilder.getContextBuilder().getCompilationUnitContents();
 
@@ -517,6 +519,7 @@ public class PositionBuilder {
 				lineSeparatorPositions);
 	}
 
+	@Nullable
 	SourcePosition buildPosition(CtCase<?> child) {
 		List<CtStatement> statements = child.getStatements();
 		SourcePosition oldPosition = child.getPosition();
@@ -526,15 +529,30 @@ public class PositionBuilder {
 		}
 		int[] lineSeparatorPositions = this.jdtTreeBuilder.getContextBuilder().getCompilationUnitLineSeparatorPositions();
 
-		int bodyStart = child.getPosition().getSourceEnd() + 1;
-		int bodyEnd = statements.get(statements.size() - 1).getPosition().getSourceEnd();
-		return child.getFactory().Core().createBodyHolderSourcePosition(
-				oldPosition.getCompilationUnit(),
-				oldPosition.getSourceStart(), oldPosition.getSourceEnd(),
-				oldPosition.getSourceStart(), oldPosition.getSourceStart() - 1,
-				oldPosition.getSourceStart(), bodyEnd,
-				bodyStart, bodyEnd,
-				lineSeparatorPositions);
+		try {
+
+			int bodyStart = child.getPosition().getSourceEnd() + 1;
+			int bodyEnd = statements.get(statements.size() - 1).getPosition().getSourceEnd();
+			return child.getFactory().Core().createBodyHolderSourcePosition(
+					oldPosition.getCompilationUnit(),
+					oldPosition.getSourceStart(), oldPosition.getSourceEnd(),
+					oldPosition.getSourceStart(), oldPosition.getSourceStart() - 1,
+					oldPosition.getSourceStart(), bodyEnd,
+					bodyStart, bodyEnd,
+					lineSeparatorPositions);
+		} catch (UnsupportedOperationException | SpoonException e) {
+			String repr = null;
+			try {
+				repr = child.toString();
+			} catch (Exception _ignored) {
+				// can't do anything.
+			}
+			Logger.getLogger(PositionBuilder.class.getName())
+					.severe("An error occurred while processing a case statement.\nThe statement's child looks like: "
+					+ repr);
+
+			return null;
+		}
 	}
 
 	/**
@@ -566,7 +584,7 @@ public class PositionBuilder {
 
 	private void setModifiersPosition(CtModifiable e, int start, int end) {
 		CoreFactory cf = this.jdtTreeBuilder.getFactory().Core();
-		CompilationUnit cu = this.jdtTreeBuilder.getContextBuilder().compilationUnitSpoon;
+		CtCompilationUnit cu = this.jdtTreeBuilder.getContextBuilder().compilationUnitSpoon;
 		char[] contents = jdtTreeBuilder.getContextBuilder().getCompilationUnitContents();
 
 		Set<CtExtendedModifier> modifiers = e.getExtendedModifiers();

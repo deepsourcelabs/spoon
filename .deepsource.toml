@@ -1,0 +1,12 @@
+version = 1
+
+test_patterns = ["src/test/**"]
+
+exclude_patterns = ["**/testclasses/**", "**/testcases/**"]
+
+[[analyzers]]
+name = "java"
+enabled = true
+
+  [analyzers.meta]
+  runtime_version = "11"
