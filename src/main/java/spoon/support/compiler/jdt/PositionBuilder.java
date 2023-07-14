@@ -8,7 +8,6 @@
 package spoon.support.compiler.jdt;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.maven.api.annotations.Nullable;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
@@ -519,7 +518,6 @@ public class PositionBuilder {
 				lineSeparatorPositions);
 	}
 
-	@Nullable
 	SourcePosition buildPosition(CtCase<?> child) {
 		List<CtStatement> statements = child.getStatements();
 		SourcePosition oldPosition = child.getPosition();
