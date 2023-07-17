@@ -8,6 +8,7 @@
 package spoon.reflect.factory;
 
 
+import spoon.annotations.Nullable;
 import spoon.reflect.declaration.CtModule;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.declaration.CtPackageDeclaration;
@@ -199,6 +200,7 @@ public class PackageFactory extends SubFactory {
 	 * @param mergingPackage - The package to merge everything into.
 	 * @return
 	 */
+	@Nullable
 	private CtPackage mergeAmbiguousPackages(ArrayList<CtPackage> packagesToMerge, CtPackage mergingPackage) {
 
 		if (mergingPackage == null) return null;
