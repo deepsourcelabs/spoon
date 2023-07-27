@@ -205,13 +205,12 @@ public class PackageFactory extends SubFactory {
 
 		if (mergingPackage == null) return null;
 
-		HashSet<CtType<?>> types = new HashSet<>(mergingPackage.getTypes());
-		HashSet<CtPackage> subpacks = new HashSet<>(mergingPackage.getPackages());
+		HashSet<CtType<?>> types = new HashSet<>();
+		HashSet<CtPackage> subpacks = new HashSet<>();
 
 		for (CtPackage pack : packagesToMerge) {
 			if (pack == mergingPackage) continue;
-
-
+			
             Set<CtType<?>> oldTypes = pack.getTypes();
             Set<CtPackage> oldPacks = pack.getPackages();
 
@@ -230,8 +229,19 @@ public class PackageFactory extends SubFactory {
             subpacks.addAll(oldPacks);
 			pack.delete();
 		}
-		mergingPackage.setTypes(types);
-		mergingPackage.setPackages(subpacks);
+		
+		for (CtType<?> type : types) {
+            if (mergingPackage.getTypes().contains(type)) {
+                continue;
+            }
+			mergingPackage.addType(type);
+		}
+		for (CtPackage ctPackage: subpacks) {
+            if (mergingPackage.getPackages().contains(ctPackage)) {
+                continue;
+            }
+			mergingPackage.addPackage(ctPackage);
+		}
 		return mergingPackage;
 	}
 

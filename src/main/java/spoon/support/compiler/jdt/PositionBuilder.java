@@ -8,7 +8,6 @@
 package spoon.support.compiler.jdt;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.maven.api.annotations.Nullable;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
@@ -30,6 +29,7 @@ import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import spoon.SpoonException;
+import spoon.annotations.Nullable;
 import spoon.reflect.code.CtCase;
 import spoon.reflect.code.CtCatch;
 import spoon.reflect.code.CtCatchVariable;
