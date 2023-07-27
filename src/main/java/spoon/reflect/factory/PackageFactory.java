@@ -203,43 +203,47 @@ public class PackageFactory extends SubFactory {
 	@Nullable
 	private CtPackage mergeAmbiguousPackages(ArrayList<CtPackage> packagesToMerge, CtPackage mergingPackage) {
 
-		if (mergingPackage == null) return null;
+		if (mergingPackage == null) {
+			return null;
+		}
 
 		HashSet<CtType<?>> types = new HashSet<>();
 		HashSet<CtPackage> subpacks = new HashSet<>();
 
 		for (CtPackage pack : packagesToMerge) {
-			if (pack == mergingPackage) continue;
-			
-            Set<CtType<?>> oldTypes = pack.getTypes();
-            Set<CtPackage> oldPacks = pack.getPackages();
+			if (pack == mergingPackage) {
+				continue;
+			}
 
-            for (CtType<?> type : oldTypes) {
+			Set<CtType<?>> oldTypes = pack.getTypes();
+			Set<CtPackage> oldPacks = pack.getPackages();
+
+			for (CtType<?> type : oldTypes) {
 				// If we don't disconnect the type from its old package, spoon will get mad.
-				((CtPackage)type.getParent()).removeType(type);
+				((CtPackage) type.getParent()).removeType(type);
 				type.setParent(null);
 			}
 			types.addAll(oldTypes);
 
-            for (CtPackage oldPack : oldPacks) {
+			for (CtPackage oldPack : oldPacks) {
 				// Applies to packagesToMerge too.
-				((CtPackage)oldPack.getParent()).removePackage(oldPack);
-                oldPack.setParent(null);
-            }
-            subpacks.addAll(oldPacks);
+				((CtPackage) oldPack.getParent()).removePackage(oldPack);
+				oldPack.setParent(null);
+			}
+			subpacks.addAll(oldPacks);
 			pack.delete();
 		}
-		
+
 		for (CtType<?> type : types) {
-            if (mergingPackage.getTypes().contains(type)) {
-                continue;
-            }
+			if (mergingPackage.getTypes().contains(type)) {
+				continue;
+			}
 			mergingPackage.addType(type);
 		}
 		for (CtPackage ctPackage: subpacks) {
-            if (mergingPackage.getPackages().contains(ctPackage)) {
-                continue;
-            }
+			if (mergingPackage.getPackages().contains(ctPackage)) {
+				continue;
+			}
 			mergingPackage.addPackage(ctPackage);
 		}
 		return mergingPackage;
