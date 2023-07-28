@@ -373,6 +373,7 @@ public class SpoonArchitectureEnforcerTest {
 		// when a pull-request introduces a new package, this test fails and the author has to explicitly declare the new package here
 
 		Set<String> officialPackages = new HashSet<>();
+		officialPackages.add("spoon.annotations");
 		officialPackages.add("spoon.compiler.builder");
 		officialPackages.add("spoon.compiler");
 		officialPackages.add("spoon.javadoc");
