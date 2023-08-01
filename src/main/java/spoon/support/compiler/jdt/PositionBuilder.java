@@ -1,9 +1,9 @@
 /*
  * SPDX-License-Identifier: (MIT OR CECILL-C)
  *
- * Copyright (C) 2006-2019 INRIA and contributors
+ * Copyright (C) 2006-2023 INRIA and contributors
  *
- * Spoon is available either under the terms of the MIT License (see LICENSE-MIT.txt) of the Cecill-C License (see LICENSE-CECILL-C.txt). You as the user are entitled to choose the terms under which to adopt Spoon.
+ * Spoon is available either under the terms of the MIT License (see LICENSE-MIT.txt) or the Cecill-C License (see LICENSE-CECILL-C.txt). You as the user are entitled to choose the terms under which to adopt Spoon.
  */
 package spoon.support.compiler.jdt;
 
@@ -467,7 +467,7 @@ public class PositionBuilder {
 	}
 
 	private int getParentsSourceStart() {
-		Iterator<ASTPair> iter = this.jdtTreeBuilder.getContextBuilder().stack.iterator();
+		Iterator<ASTPair> iter = this.jdtTreeBuilder.getContextBuilder().getAllContexts().iterator();
 		if (iter.hasNext()) {
 			iter.next();
 			if (iter.hasNext()) {
@@ -519,7 +519,6 @@ public class PositionBuilder {
 				lineSeparatorPositions);
 	}
 
-	@Nullable
 	SourcePosition buildPosition(CtCase<?> child) {
 		List<CtStatement> statements = child.getStatements();
 		SourcePosition oldPosition = child.getPosition();

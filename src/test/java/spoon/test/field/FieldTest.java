@@ -23,6 +23,8 @@ import static spoon.testing.utils.ModelUtils.createFactory;
 import java.io.File;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,11 +35,13 @@ import spoon.reflect.code.CtReturn;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.TypeFilter;
+import spoon.support.compiler.VirtualFile;
 import spoon.support.reflect.eval.VisitorPartialEvaluator;
 import spoon.test.field.testclasses.A;
 import spoon.test.field.testclasses.AddFieldAtTop;
@@ -215,5 +219,57 @@ public class FieldTest {
 
 	}
 
+	@ModelTest(
+					"./src/test/java/spoon/test/field/testclasses/AnnoWithConst.java"
+	)
+	void testGetActualFieldForConstantInAnnotation(CtModel ctModel) {
+		// contract: CtFieldReference#getActualField() returns the field for constants in annotations
+		CtFieldReference<?> access = ctModel.getElements(new TypeFilter<CtFieldReference<?>>(CtFieldReference.class))
+						.stream()
+						.filter(field -> field.getSimpleName().equals("VALUE"))
+						.findFirst()
+						.orElseGet(() -> fail("No reference to VALUE found"));
+		assertNotNull(assertDoesNotThrow(access::getActualField));
+	}
+
+	@Test
+	void testArrayLengthDeclaringType() {
+		// contract: the "length" field of arrays has a proper declaring type
+		Launcher launcher = new Launcher();
+		launcher.addInputResource(new VirtualFile("public class Example {\n" +
+																							"    static final String[] field;\n" +
+																							"    public static void main(String[] args) {\n" +
+																							"        int i = args.length;\n" +
+																							"        int j = field.length;\n" +
+																							"    }\n" +
+																							"}\n"));
+		CtModel ctModel = launcher.buildModel();
+		List<CtFieldReference<?>> elements = ctModel.getElements(new TypeFilter<CtFieldReference<?>>(CtFieldReference.class))
+						.stream()
+						.filter(field -> field.getSimpleName().equals("length"))
+						.collect(Collectors.toList());
+		CtType<?> component = launcher.getFactory().Type().get(String.class);
+		CtTypeReference<?> arrayType = launcher.getFactory().Type().createArrayReference(component);
+
+		assertEquals(2, elements.size(), "Unexpected number of .length references");
+
+		assertEquals(arrayType, elements.get(0).getDeclaringType());
+		assertEquals(arrayType, elements.get(1).getDeclaringType());
+	}
+
+	@Test
+	void testArrayLengthModifiers() {
+		// contract: the "length" field in arrays has exactly the modifiers "public" and "final"
+		Launcher launcher = new Launcher();
+		launcher.addInputResource(new VirtualFile("public class Example {\n" +
+						"    public static void main(String[] args) {\n" +
+						"        int i = args.length;\n" +
+						"    }\n" +
+						"}\n"));
+		CtModel ctModel = launcher.buildModel();
+		List<CtFieldReference<?>> elements = ctModel.getElements(new TypeFilter<>(CtFieldReference.class));
+		assertEquals(1, elements.size());
+		assertEquals(Set.of(ModifierKind.PUBLIC, ModifierKind.FINAL), elements.get(0).getModifiers());
+	}
 
 }
