@@ -828,7 +828,7 @@ public class TemplateTest {
 		assertFalse(result.isParentInitialized());
 		assertEquals("new java.lang.String(\"Spoon is cool!\")", result.toString());
 	}
-	
+
 	@Test
 	public void substituteSubString() {
 		//contract: the substitution of substrings works on named elements and references too
