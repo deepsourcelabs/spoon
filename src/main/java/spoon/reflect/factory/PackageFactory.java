@@ -12,6 +12,7 @@ import spoon.annotations.Nullable;
 import spoon.reflect.declaration.CtModule;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.declaration.CtPackageDeclaration;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.reference.CtPackageReference;
 
 import java.util.ArrayList;

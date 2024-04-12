@@ -209,6 +209,9 @@ public class TypeFactory extends SubFactory {
 	@Deprecated(since = "11.0.0", forRemoval = true)
 	public final CtTypeReference<?> OMITTED_TYPE_ARG_TYPE = createReference(CtTypeReference.OMITTED_TYPE_ARG_NAME);
 
+	private final Map<Class<?>, CtType<?>> shadowCache = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, WeakReference<CtType<?>>> typeRefCache = new ConcurrentHashMap<>();
+
 	// This map MUST provide a useful computeIfAbsent method in the face of concurrency.
 	// Therefore, we declare it as a ConcurrentHashMap directly.
 	private final ConcurrentHashMap<Class<?>, CtType<?>> shadowCache = new ConcurrentHashMap<>();
