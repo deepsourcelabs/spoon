@@ -890,7 +890,7 @@ public class JDTTreeBuilder extends ASTVisitor {
 	@Override
 	public boolean visit(AllocationExpression allocationExpression, BlockScope scope) {
 		CtElement currentElement = context.getCurrentElement();
-		LOGGER.info("Path: " + currentElement.getPath().toString());
+		// LOGGER.info("Path: " + currentElement.getPath().toString());
  		LOGGER.info("Position: " + currentElement.getPosition().toString());
 		LOGGER.info("Pretty Print: " + currentElement.prettyprint());
 		LOGGER.info("Current Element: " + currentElement);
