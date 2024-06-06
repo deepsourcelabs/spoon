@@ -891,9 +891,9 @@ public class JDTTreeBuilder extends ASTVisitor {
 	public boolean visit(AllocationExpression allocationExpression, BlockScope scope) {
 		CtElement currentElement = context.getCurrentElement();
 		// LOGGER.info("Path: " + currentElement.getPath().toString());
- 		LOGGER.info("Position: " + currentElement.getPosition().toString());
-		LOGGER.info("Pretty Print: " + currentElement.prettyprint());
-		LOGGER.info("Current Element: " + currentElement);
+ 		System.out.println("Position: " + currentElement.getPosition().toString());
+		System.out.println("Pretty Print: " + currentElement.prettyprint());
+		System.out.println("Current Element: " + currentElement);
 		CtConstructorCall constructorCall = factory.Core().createConstructorCall();
 		constructorCall.setExecutable(references.getExecutableReference(allocationExpression));
 
