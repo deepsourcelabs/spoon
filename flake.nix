@@ -4,7 +4,6 @@
   # Nixpkgs / NixOS version to use.
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nixpkgs.inputs = { commit = "63dacb46bf939521bdc93981b4cbb7ecb58427a0"; };
   };
 
   outputs = { self, nixpkgs }:
