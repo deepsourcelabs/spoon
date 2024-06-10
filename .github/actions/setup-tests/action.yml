@@ -15,6 +15,7 @@ runs:
       uses: DeterminateSystems/flake-checker-action@4b90f9fc724969ff153fe1803460917c84fe00a3 # v5
       with:
         fail-mode: true
+        check-outdated: false
     - name: Use Maven dependency cache
       uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
       with:
