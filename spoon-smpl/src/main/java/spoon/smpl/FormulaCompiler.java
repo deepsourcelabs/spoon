@@ -418,11 +418,9 @@ public class FormulaCompiler {
 		quantifiedMetavars = shallowCopy(quantifiedMetavars);
 		List<ControlFlowNode> prevNodes = dotsNode.prev();
 
-		switch (prevNodes.size()) {
-			case 1:
-				ControlFlowNode prevNode = prevNodes.get(0);
-
-				switch (prevNode.getKind()) {
+		if (prevNodes.size() == 1) {
+ControlFlowNode prevNode = prevNodes.get(0);
+switch (prevNode.getKind()) {
 					case STATEMENT:
 						if (SmPLMethodCFG.isMethodHeaderNode(prevNode)) {
 							return null;
@@ -431,13 +429,45 @@ public class FormulaCompiler {
 						return compileFormulaInner(prevNode, Collections.singletonList(dotsNode), quantifiedMetavars);
 
 					case BLOCK_BEGIN:
-						switch (prevNode.prev().size()) {
-							case 1:
-								return compileFormulaInner(prevNode.prev().get(0), prevNode.prev().get(0).next(), quantifiedMetavars);
+						if (prevNode.prev().size() == 1) {
+return compileFormulaInner(prevNode.prev().get(0), prevNode.prev().get(0).next(), quantifiedMetavars);
+}
 
-							default:
-								throw new NotImplementedException("preGuard not implemented for BLOCK_BEGIN with " + Integer.toString(prevNode.prev().size()) + " predecessors");
+throw new NotImplementedException("preGuard not implemented for BLOCK_BEGIN with " + Integer.toString(prevNode.prev().size()) + " predecessors");
+
+
+
+					case CONVERGE:
+						// FIXME: relies on implementation details in spoon-control-flow
+						ControlFlowNode branchNode = prevNode.getParent().findNodeById(prevNode.getId() - 1);
+
+						if (SmPLJavaDSL.isBeginDisjunction(branchNode.getStatement().getParent())) {
+							// TODO: figure out if a disjunction should generate a guard
+							return null;
+						} else {
+							return compileFormulaInner(branchNode, branchNode.next(), quantifiedMetavars);
 						}
+					default:
+						throw new NotImplementedException("preGuard not implemented for " + prevNode.getKind().toString() + " single predecessor");
+				}
+}
+
+ControlFlowNode prevNode = prevNodes.get(0);
+switch (prevNode.getKind()) {
+					case STATEMENT:
+						if (SmPLMethodCFG.isMethodHeaderNode(prevNode)) {
+							return null;
+						}
+
+						return compileFormulaInner(prevNode, Collections.singletonList(dotsNode), quantifiedMetavars);
+
+					case BLOCK_BEGIN:
+						if (prevNode.prev().size() == 1) {
+return compileFormulaInner(prevNode.prev().get(0), prevNode.prev().get(0).next(), quantifiedMetavars);
+}
+
+throw new NotImplementedException("preGuard not implemented for BLOCK_BEGIN with " + Integer.toString(prevNode.prev().size()) + " predecessors");
+
 
 
 					case CONVERGE:
@@ -454,9 +484,6 @@ public class FormulaCompiler {
 						throw new NotImplementedException("preGuard not implemented for " + prevNode.getKind().toString() + " single predecessor");
 				}
 
-			default:
-				throw new NotImplementedException("preGuard not implemented for " + prevNodes.size() + " predecessors");
-		}
 	}
 
 	/**
@@ -476,11 +503,25 @@ public class FormulaCompiler {
 			nextNodes = dotsNode.getParent().findNodeById(dotsNode.getId() + 1).next();
 		}
 
-		switch (nextNodes.size()) {
-			case 1:
-				ControlFlowNode nextNode = nextNodes.get(0);
+		if (nextNodes.size() == 1) {
+ControlFlowNode nextNode = nextNodes.get(0);
+switch (nextNode.getKind()) {
+					case STATEMENT:
+						return compileFormulaInner(nextNode, nextNode.next(), quantifiedMetavars);
 
-				switch (nextNode.getKind()) {
+					case CONVERGE:
+						return null;
+
+					case EXIT:
+						return null;
+
+					default:
+						throw new NotImplementedException("postGuard not implemented for " + nextNode.getKind().toString() + " single successor");
+				}
+}
+
+ControlFlowNode nextNode = nextNodes.get(0);
+switch (nextNode.getKind()) {
 					case STATEMENT:
 						return compileFormulaInner(nextNode, nextNode.next(), quantifiedMetavars);
 
@@ -494,9 +535,6 @@ public class FormulaCompiler {
 						throw new NotImplementedException("postGuard not implemented for " + nextNode.getKind().toString() + " single successor");
 				}
 
-			default:
-				throw new NotImplementedException("postGuard not implemented for " + nextNodes.size() + " successors");
-		}
 	}
 
 	/**

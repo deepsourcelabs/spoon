@@ -53,14 +53,11 @@ public class CommentHelper {
 			break;
 		}
 		// content
-		switch (commentType) {
-			case INLINE:
-				printer.write(content);
-				break;
-			default:
-				// per line suffix
-				printCommentContent(printer, comment, s -> { return (" * " + s).replaceAll(" *$", ""); });
-		}
+		if (commentType == INLINE) {
+printer.write(content);
+} else {
+printCommentContent(printer, comment, s -> { return (" * " + s).replaceAll(" *$", ""); });
+}
 		// suffix
 		switch (commentType) {
 			case BLOCK:

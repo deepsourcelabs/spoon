@@ -261,14 +261,11 @@ public class SmPLParser {
 						String constraintType = ((CtLiteral<?>) invocation.getArguments().get(0)).getValue().toString();
 						String constraintValue = ((CtLiteral<?>) invocation.getArguments().get(1)).getValue().toString();
 
-						switch (constraintType) {
-							case "regex-match":
-								metavars.put(currentVarName, new RegexConstraint(constraintValue, metavars.get(currentVarName)));
-								break;
-
-							default:
-								throw new IllegalArgumentException("unknown constraint type " + constraintType);
-						}
+						if (constraintType == "regex-match") {
+metavars.put(currentVarName, new RegexConstraint(constraintValue, metavars.get(currentVarName)));
+} else {
+throw new IllegalArgumentException("unknown constraint type " + constraintType);
+}
 
 
 					} else {
